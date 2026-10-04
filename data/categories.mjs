@@ -950,6 +950,6 @@ const categories = [
 ];
 
 // Порядок страниц в меню и на главной
-const order = ["images", "photo", "universal", "texts", "study", "books", "productivity", "business", "data", "languages", "retro", "libraries"];
+const order = ["universal", "images", "photo", "texts", "study", "books", "productivity", "business", "data", "languages", "retro", "libraries"];
 const all = [...categories, study, retro, libraries];
 export default order.map((slug) => all.find((c) => c.slug === slug));
