@@ -1,43 +1,4 @@
 :root {
-  --bg: #F4F1EA;
-  --surface: #FFFDF8;
-  --surface-2: #ECE7DC;
-  --text: #1B1A16;
-  --text-2: #5F5B52;
-  --muted: #8C877C;
-  --border: #E1DACB;
-  --border-strong: #CFC6B3;
-  --accent: #C4471B;
-  --accent-soft: #F6E1D5;
-  --focus: rgba(196, 71, 27, 0.28);
-  --shadow: 0 1px 0 rgba(27, 26, 22, 0.04), 0 12px 28px -18px rgba(27, 26, 22, 0.25);
-
-  --font: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  --radius: 14px;
-  --gutter: 16px;
-  color-scheme: light;
-}
-
-/* тёмная тема: по системе (если вручную не выбрана светлая) или по кнопке */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #14130F;
-    --surface: #1D1C17;
-    --surface-2: #26241E;
-    --text: #F1ECE1;
-    --text-2: #B3AC9E;
-    --muted: #857F72;
-    --border: #2E2C25;
-    --border-strong: #423F35;
-    --accent: #F07A4A;
-    --accent-soft: #3A2318;
-    --focus: rgba(240, 122, 74, 0.35);
-    --shadow: none;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
   --bg: #14130F;
   --surface: #1D1C17;
   --surface-2: #26241E;
@@ -50,6 +11,11 @@
   --accent-soft: #3A2318;
   --focus: rgba(240, 122, 74, 0.35);
   --shadow: none;
+
+  --font: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --radius: 14px;
+  --gutter: 16px;
   color-scheme: dark;
 }
 
@@ -295,7 +261,7 @@ h1 {
 .prompt-head .hint { margin: 4px 0 0; color: var(--text-2); }
 .btn {
   display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font: inherit; font-weight: 700; font-size: 15px;
-  background: var(--accent); color: #fff; border: 0; border-radius: 10px; padding: 10px 16px;
+  background: var(--accent); color: var(--bg); border: 0; border-radius: 10px; padding: 10px 16px;
   transition: transform 120ms, filter 150ms;
 }
 .btn:hover { filter: brightness(1.08); }
@@ -383,33 +349,3 @@ h1 {
           mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6 6 18'/%3E%3C/svg%3E") center / 16px no-repeat;
 }
 
-/* переключатель темы */
-.theme-toggle {
-  flex: none; position: relative; margin-left: 20px;
-  width: 40px; height: 40px; border-radius: 999px; display: grid; place-items: center;
-  border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer;
-  padding: 0; transition: border-color 150ms, transform 120ms;
-}
-.theme-toggle:hover { border-color: var(--accent); }
-.theme-toggle:active { transform: scale(0.94); }
-.theme-toggle svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.theme-toggle::before {
-  content: ""; position: absolute; left: -25px; top: 50%; transform: translateY(-50%);
-  width: 1px; height: 24px; background: var(--border-strong);
-}
-/* в тёмной теме — солнце (включить светлую), в светлой — луна */
-.theme-toggle .i-sun { display: none; }
-:root[data-theme="dark"] .theme-toggle .i-sun { display: block; }
-:root[data-theme="dark"] .theme-toggle .i-moon { display: none; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .theme-toggle .i-sun { display: block; }
-  :root:not([data-theme="light"]) .theme-toggle .i-moon { display: none; }
-}
-/* разделитель теперь перед переключателем, Instagram — рядом с ним */
-.site-header .container > .social { margin-left: -18px; }
-.site-header .container > .social::before { display: none; }
-@media (max-width: 720px) {
-  .theme-toggle { margin-left: 0; }
-  .theme-toggle::before { display: none; }
-  .site-header .container > .social { margin-left: -6px; }
-}

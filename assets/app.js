@@ -77,29 +77,6 @@
     spy();
   }
 
-  // Переключатель темы: выбор запоминается в браузере посетителя
-  var toggle = document.querySelector(".theme-toggle");
-  if (toggle) {
-    var root = document.documentElement;
-    var systemDark = window.matchMedia("(prefers-color-scheme: dark)");
-    var isDark = function () { return root.dataset.theme ? root.dataset.theme === "dark" : systemDark.matches; };
-    var sync = function () {
-      var bg = getComputedStyle(root).getPropertyValue("--bg").trim();
-      document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) { m.setAttribute("content", bg); });
-      var label = isDark() ? "Включить светлую тему" : "Включить тёмную тему";
-      toggle.setAttribute("aria-label", label);
-      toggle.title = label;
-    };
-    toggle.addEventListener("click", function () {
-      var next = isDark() ? "light" : "dark";
-      root.dataset.theme = next;
-      try { localStorage.setItem("theme", next); } catch (e) {}
-      sync();
-    });
-    systemDark.addEventListener("change", sync);
-    sync();
-  }
-
   // Высота закреплённой шапки — для липкой панели поиска и якорей
   var header = document.querySelector(".site-header");
   if (header) {
