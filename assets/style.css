@@ -19,6 +19,7 @@
   color-scheme: light;
 }
 
+/* тёмная тема: по системе (если вручную не выбрана светлая) или по кнопке */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #14130F;
@@ -35,6 +36,21 @@
     --shadow: none;
     color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+  --bg: #14130F;
+  --surface: #1D1C17;
+  --surface-2: #26241E;
+  --text: #F1ECE1;
+  --text-2: #B3AC9E;
+  --muted: #857F72;
+  --border: #2E2C25;
+  --border-strong: #423F35;
+  --accent: #F07A4A;
+  --accent-soft: #3A2318;
+  --focus: rgba(240, 122, 74, 0.35);
+  --shadow: none;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -365,4 +381,35 @@ h1 {
   background: var(--muted);
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6 6 18'/%3E%3C/svg%3E") center / 16px no-repeat;
           mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6 6 18'/%3E%3C/svg%3E") center / 16px no-repeat;
+}
+
+/* переключатель темы */
+.theme-toggle {
+  flex: none; position: relative; margin-left: 20px;
+  width: 40px; height: 40px; border-radius: 999px; display: grid; place-items: center;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer;
+  padding: 0; transition: border-color 150ms, transform 120ms;
+}
+.theme-toggle:hover { border-color: var(--accent); }
+.theme-toggle:active { transform: scale(0.94); }
+.theme-toggle svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.theme-toggle::before {
+  content: ""; position: absolute; left: -25px; top: 50%; transform: translateY(-50%);
+  width: 1px; height: 24px; background: var(--border-strong);
+}
+/* в тёмной теме — солнце (включить светлую), в светлой — луна */
+.theme-toggle .i-sun { display: none; }
+:root[data-theme="dark"] .theme-toggle .i-sun { display: block; }
+:root[data-theme="dark"] .theme-toggle .i-moon { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-toggle .i-sun { display: block; }
+  :root:not([data-theme="light"]) .theme-toggle .i-moon { display: none; }
+}
+/* разделитель теперь перед переключателем, Instagram — рядом с ним */
+.site-header .container > .social { margin-left: -18px; }
+.site-header .container > .social::before { display: none; }
+@media (max-width: 720px) {
+  .theme-toggle { margin-left: 0; }
+  .theme-toggle::before { display: none; }
+  .site-header .container > .social { margin-left: -6px; }
 }
