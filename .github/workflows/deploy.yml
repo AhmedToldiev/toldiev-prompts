@@ -41,14 +41,23 @@ jobs:
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "Сборка ок, $VERSION"
 
+      - name: Check Timeweb token
+        id: token
+        env:
+          TIMEWEB_TOKEN: ${{ secrets.TIMEWEB_TOKEN }}
+        run: |
+          if [ -n "$TIMEWEB_TOKEN" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Секрет TIMEWEB_TOKEN не задан — только проверка сборки, деплой на Timeweb пропущен"
+          fi
+
       - name: Deploy to Timeweb
+        if: steps.token.outputs.present == 'true'
         env:
           TIMEWEB_TOKEN: ${{ secrets.TIMEWEB_TOKEN }}
         run: |
           set -e
-          if [ -z "$TIMEWEB_TOKEN" ]; then
-            echo "::error::Секрет TIMEWEB_TOKEN не задан"; exit 1
-          fi
           code=$(curl -s -o response.json -w '%{http_code}' -X POST \
             "https://api.timeweb.cloud/api/v1/apps/$TIMEWEB_APP_ID/deploy" \
             -H "Authorization: Bearer $TIMEWEB_TOKEN" \
@@ -59,6 +68,7 @@ jobs:
           case "$code" in 2*) ;; *) echo "::error::Timeweb не принял деплой ($code)"; exit 1 ;; esac
 
       - name: Wait for new version on site
+        if: steps.token.outputs.present == 'true'
         run: |
           for i in $(seq 1 40); do
             if curl -s -m 15 "$SITE_URL/?ci=$GITHUB_RUN_ID-$i" | grep -q "$VERSION"; then
