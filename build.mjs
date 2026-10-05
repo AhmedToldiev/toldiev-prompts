@@ -281,7 +281,7 @@ function categoryPage(cat, i) {
           <button class="btn" type="button" data-copy-from="instruction" data-toast="Инструкция скопирована">${COPY_ICON}<span>Скопировать</span></button>
         </div>
         <details>
-          <summary>Показать текст</summary>
+          <summary><span class="when-closed">Показать текст</span><span class="when-open">Свернуть текст</span></summary>
           <pre id="instruction">${esc(promptText(cat))}</pre>
         </details>
       </div>`

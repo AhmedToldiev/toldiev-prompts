@@ -285,7 +285,21 @@ h1 {
 .btn .i-check { display: none; }
 .btn.is-copied .i-copy { display: none; }
 .btn.is-copied .i-check { display: block; }
-.prompt-box summary { cursor: pointer; margin-top: 14px; font-size: 14px; font-weight: 600; color: var(--accent); }
+.prompt-box summary {
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer; list-style: none;
+  margin-top: 14px; padding: 6px 0; font-size: 14px; font-weight: 600; color: var(--accent);
+}
+.prompt-box summary::-webkit-details-marker { display: none; }
+/* стрелка: вниз — свёрнуто, вверх — развёрнуто */
+.prompt-box summary::before {
+  content: ""; width: 7px; height: 7px; margin: -3px 0 0 2px;
+  border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(45deg); transition: transform 150ms, margin 150ms;
+}
+.prompt-box details[open] > summary::before { transform: rotate(-135deg); margin-top: 3px; }
+.prompt-box summary .when-open,
+.prompt-box details[open] > summary .when-closed { display: none; }
+.prompt-box details[open] > summary .when-open { display: inline; }
 .prompt-box pre {
   white-space: pre-wrap; font-family: var(--mono); font-size: 12.5px; line-height: 1.55; color: var(--text-2);
   background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
