@@ -13,7 +13,7 @@ concurrency:
 
 env:
   TIMEWEB_APP_ID: "265019"
-  SITE_URL: https://ahmedtoldiev-toldiev-prompts-06fe.twc1.net
+  SITE_URL: https://toldiev-prompts.ru
 
 jobs:
   deploy:
