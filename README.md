@@ -10,6 +10,7 @@
 - `data/extra.mjs` — «Учёба по фото», «Ретро-фото» (готовые промпты), «Сайты с промптами» (ссылки)
 - `site.config.mjs` — название, автор, Instagram, Telegram
 - `assets/style.css`, `assets/app.js` — стили и поведение
+- `assets/fonts/` — шрифты Manrope и JetBrains Mono (SIL OFL), лежат на сайте вместо Google Fonts
 
 Новая категория в данных = новая страница `/<slug>/`.
 

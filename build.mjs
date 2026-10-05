@@ -1,9 +1,17 @@
 // Генератор статичного сайта: node build.mjs → dist/
-import { mkdirSync, rmSync, cpSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync, cpSync, writeFileSync, readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import config from "./site.config.mjs";
 import categories from "./data/categories.mjs";
 
 const OUT = "dist";
+
+// Версия стилей и скрипта: меняется вместе с их содержимым, чтобы браузер не держал старый кеш
+const VERSION = createHash("sha1")
+  .update(readFileSync("assets/style.css"))
+  .update(readFileSync("assets/app.js"))
+  .digest("hex")
+  .slice(0, 8);
 
 const esc = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -73,10 +81,9 @@ function layout({ title, description, path, body }) {
   <meta name="theme-color" content="#14130F" />
   <meta name="color-scheme" content="dark" />
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/assets/style.css" />
+  <link rel="preload" href="/assets/fonts/manrope-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="/assets/style.css?v=${VERSION}" />
 </head>
 <body>
   <header class="site-header">
@@ -111,7 +118,7 @@ ${body}
     </div>
   </footer>
   <div class="toast" role="status" aria-live="polite"></div>
-  <script src="/assets/app.js" defer></script>
+  <script src="/assets/app.js?v=${VERSION}" defer></script>
 </body>
 </html>
 `;
@@ -167,9 +174,9 @@ function promptsBody(cat) {
               <h2>${esc(p.title)}</h2>
               <p class="hint">${esc(p.desc)}</p>
             </div>
-            <button class="btn" type="button" data-copy="${esc(p.text)}" data-toast="Промпт скопирован">${COPY_ICON}<span>Скопировать</span></button>
+            <button class="btn" type="button" data-copy-from="p${pi + 1}" data-toast="Промпт скопирован">${COPY_ICON}<span>Скопировать</span></button>
           </div>
-          <pre>${esc(p.text)}</pre>${
+          <pre id="p${pi + 1}">${esc(p.text)}</pre>${
             p.tips?.length ? `\n          <ul class="tips">${p.tips.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : ""
           }
         </section>`
@@ -192,7 +199,7 @@ function linksBody(cat) {
               <h2><a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.title)} ↗</a></h2>
               <p class="hint">${esc(l.desc)}</p>
             </div>
-            <button class="cmd-copy" type="button" data-copy="${esc(l.url)}" aria-label="Скопировать ссылку ${esc(l.title)}"><code>${esc(l.url.replace(/^https?:\/\//, "").replace(/\/$/, ""))}</code><span class="copy-ico">${COPY_ICON}</span></button>
+            <button class="cmd-copy" type="button" data-copy="${esc(l.url)}" aria-label="Скопировать ссылку ${esc(l.title)}"><code>${esc(l.url.replace(/^https?:\/\//, "").replace(/\/$/, ""))}</code><span class="copy-ico" aria-hidden="true"></span></button>
           </div>${
             l.tips?.length ? `\n          <ul class="tips">${l.tips.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : ""
           }
@@ -226,11 +233,9 @@ function categoryPage(cat, i) {
         .map(([cmd, desc]) => {
           n++;
           return `
-            <li class="cmd" data-search="${esc((cmd + " " + desc).toLowerCase())}">
+            <li class="cmd">
               <span class="cmd-num">${pad(n)}</span>
-              <button class="cmd-copy" type="button" data-copy="${esc(cmd)}" aria-label="Скопировать ${esc(cmd)}">
-                <code>${esc(cmd)}</code><span class="copy-ico">${COPY_ICON}</span>
-              </button>
+              <button class="cmd-copy" type="button" data-copy="${esc(cmd)}" title="Скопировать"><code>${esc(cmd)}</code><span class="copy-ico" aria-hidden="true"></span></button>
               <span class="cmd-desc">${esc(desc)}</span>
             </li>`;
         })
@@ -273,11 +278,11 @@ function categoryPage(cat, i) {
             <h2>${esc(cat.prompt.title)}</h2>
             <p class="hint">${esc(cat.prompt.note)}</p>
           </div>
-          <button class="btn" type="button" data-copy="${esc(promptText(cat))}" data-toast="Инструкция скопирована">${COPY_ICON}<span>Скопировать</span></button>
+          <button class="btn" type="button" data-copy-from="instruction" data-toast="Инструкция скопирована">${COPY_ICON}<span>Скопировать</span></button>
         </div>
         <details>
           <summary>Показать текст</summary>
-          <pre>${esc(promptText(cat))}</pre>
+          <pre id="instruction">${esc(promptText(cat))}</pre>
         </details>
       </div>`
           : ""
@@ -315,13 +320,23 @@ ${
   });
 }
 
+// Минификация: убираем переносы и отступы между тегами (текст внутри <pre> не трогаем — в нём нет тегов)
+const minifyHtml = (html) => html.replace(/>\s*\n\s*</g, "><").trim() + "\n";
+const minifyCss = (css) =>
+  css
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\s*\n\s*/g, "")
+    .replace(/\s*([{};,>])\s*/g, "$1")
+    .replace(/;}/g, "}");
+
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
 cpSync("assets", `${OUT}/assets`, { recursive: true });
-writeFileSync(`${OUT}/index.html`, homePage());
+writeFileSync(`${OUT}/assets/style.css`, minifyCss(readFileSync("assets/style.css", "utf8")));
+writeFileSync(`${OUT}/index.html`, minifyHtml(homePage()));
 categories.forEach((cat, i) => {
   mkdirSync(`${OUT}/${cat.slug}`, { recursive: true });
-  writeFileSync(`${OUT}/${cat.slug}/index.html`, categoryPage(cat, i));
+  writeFileSync(`${OUT}/${cat.slug}/index.html`, minifyHtml(categoryPage(cat, i)));
 });
 writeFileSync(
   `${OUT}/404.html`,

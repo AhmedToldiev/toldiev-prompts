@@ -30,9 +30,10 @@
     return Promise.resolve();
   }
 
-  document.querySelectorAll("[data-copy]").forEach(function (btn) {
+  document.querySelectorAll("[data-copy], [data-copy-from]").forEach(function (btn) {
     btn.addEventListener("click", function () {
-      var text = btn.getAttribute("data-copy") || "";
+      var from = btn.getAttribute("data-copy-from");
+      var text = from ? document.getElementById(from).textContent : btn.getAttribute("data-copy") || "";
       copy(text).then(function () {
         btn.classList.add("is-copied");
         showToast(text, btn.getAttribute("data-toast"));
@@ -45,7 +46,12 @@
   var current = document.querySelector('.topnav [aria-current="page"]');
   var topnav = document.querySelector(".topnav");
   if (current && topnav && window.matchMedia("(max-width: 720px), (hover: none)").matches) {
-    topnav.scrollLeft += current.getBoundingClientRect().left - topnav.getBoundingClientRect().left - 8;
+    var showCurrent = function () {
+      topnav.scrollLeft += current.getBoundingClientRect().left - topnav.getBoundingClientRect().left - 8;
+    };
+    showCurrent();
+    // после загрузки шрифта ширина пунктов меняется — пересчитываем
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(showCurrent);
   }
 
   // Разделы страницы: колесо мыши и подсветка текущего раздела
@@ -98,7 +104,7 @@
       var q = input.value.trim().toLowerCase().replace(/^\//, "");
       var shown = 0;
       items.forEach(function (li) {
-        var match = !q || li.getAttribute("data-search").indexOf(q) !== -1;
+        var match = !q || li.textContent.toLowerCase().indexOf(q) !== -1;
         li.hidden = !match;
         if (match) shown++;
       });
