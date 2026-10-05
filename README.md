@@ -24,3 +24,7 @@ python3 -m http.server 4173 -d dist     # локальный просмотр: h
 ## Деплой
 
 Vercel: сборка `node build.mjs`, папка `dist` (см. `vercel.json`).
+
+## CI/CD
+
+`.github/workflows/deploy.yml`: каждый пуш в `main` собирает сайт, проверяет страницы, запускает деплой этого коммита на Timeweb (API) и ждёт, пока новая версия появится на сайте. Нужен секрет репозитория `TIMEWEB_TOKEN`. Vercel обновляется сам через интеграцию с GitHub.

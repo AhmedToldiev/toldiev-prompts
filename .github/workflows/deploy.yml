@@ -1,0 +1,69 @@
+# Каждый пуш в main: собрать сайт → выкатить этот коммит на Timeweb → убедиться, что новая версия открывается.
+# Нужен секрет репозитория TIMEWEB_TOKEN (API-токен Timeweb Cloud).
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-timeweb
+  cancel-in-progress: true
+
+env:
+  TIMEWEB_APP_ID: "265019"
+  SITE_URL: https://ahmedtoldiev-toldiev-prompts-06fe.twc1.net
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Build
+        run: node build.mjs
+
+      - name: Check build output
+        run: |
+          set -e
+          for page in index.html universal books study images photo retro texts business productivity data languages libraries; do
+            f="dist/$page"; [ "$page" = index.html ] || f="dist/$page/index.html"
+            test -s "$f" || { echo "::error::Нет страницы $f"; exit 1; }
+          done
+          VERSION=$(grep -o 'style.css?v=[a-f0-9]*' dist/index.html | head -1)
+          test -n "$VERSION" || { echo "::error::Не найдена версия стилей"; exit 1; }
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "Сборка ок, $VERSION"
+
+      - name: Deploy to Timeweb
+        env:
+          TIMEWEB_TOKEN: ${{ secrets.TIMEWEB_TOKEN }}
+        run: |
+          set -e
+          if [ -z "$TIMEWEB_TOKEN" ]; then
+            echo "::error::Секрет TIMEWEB_TOKEN не задан"; exit 1
+          fi
+          code=$(curl -s -o response.json -w '%{http_code}' -X POST \
+            "https://api.timeweb.cloud/api/v1/apps/$TIMEWEB_APP_ID/deploy" \
+            -H "Authorization: Bearer $TIMEWEB_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"commit_sha\": \"$GITHUB_SHA\"}")
+          echo "Timeweb ответил $code"
+          cat response.json; echo
+          case "$code" in 2*) ;; *) echo "::error::Timeweb не принял деплой ($code)"; exit 1 ;; esac
+
+      - name: Wait for new version on site
+        run: |
+          for i in $(seq 1 40); do
+            if curl -s -m 15 "$SITE_URL/?ci=$GITHUB_RUN_ID-$i" | grep -q "$VERSION"; then
+              echo "Новая версия на сайте ($VERSION) через ~$((i * 15)) с"; exit 0
+            fi
+            sleep 15
+          done
+          echo "::error::За 10 минут новая версия не появилась на $SITE_URL"; exit 1
