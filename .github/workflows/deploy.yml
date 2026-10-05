@@ -18,7 +18,8 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # сборка на стороне Timeweb идёт ~20 минут
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v5
 
@@ -66,14 +67,39 @@ jobs:
           echo "Timeweb ответил $code"
           cat response.json; echo
           case "$code" in 2*) ;; *) echo "::error::Timeweb не принял деплой ($code)"; exit 1 ;; esac
+          DEPLOY_ID=$(jq -r '.deploy.id' response.json)
+          test -n "$DEPLOY_ID" && test "$DEPLOY_ID" != null || { echo "::error::В ответе нет id деплоя"; exit 1; }
+          echo "DEPLOY_ID=$DEPLOY_ID" >> "$GITHUB_ENV"
+
+      - name: Wait for Timeweb build
+        if: steps.token.outputs.present == 'true'
+        env:
+          TIMEWEB_TOKEN: ${{ secrets.TIMEWEB_TOKEN }}
+        run: |
+          last=""
+          for i in $(seq 1 80); do
+            curl -s "https://api.timeweb.cloud/api/v1/apps/$TIMEWEB_APP_ID/deploys" \
+              -H "Authorization: Bearer $TIMEWEB_TOKEN" > deploys.json || true
+            status=$(jq -r --arg id "$DEPLOY_ID" '[.. | objects | select(.id? == $id)][0].status // empty' deploys.json)
+            ended=$(jq -r --arg id "$DEPLOY_ID" '[.. | objects | select(.id? == $id)][0].ended_at // empty' deploys.json)
+            [ "$status" != "$last" ] && echo "$(date -u +%H:%M:%S) статус деплоя: ${status:-неизвестен}" && last="$status"
+            if [ -n "$ended" ]; then
+              case "$status" in
+                *fail*|*error*|*cancel*|*stop*) echo "::error::Timeweb: деплой завершился со статусом $status"; exit 1 ;;
+                *) echo "Timeweb закончил деплой: $status"; exit 0 ;;
+              esac
+            fi
+            sleep 30
+          done
+          echo "::error::Timeweb не закончил деплой за 40 минут"; exit 1
 
       - name: Wait for new version on site
         if: steps.token.outputs.present == 'true'
         run: |
-          for i in $(seq 1 40); do
+          for i in $(seq 1 20); do
             if curl -s -m 15 "$SITE_URL/?ci=$GITHUB_RUN_ID-$i" | grep -q "$VERSION"; then
-              echo "Новая версия на сайте ($VERSION) через ~$((i * 15)) с"; exit 0
+              echo "Новая версия на сайте ($VERSION)"; exit 0
             fi
             sleep 15
           done
-          echo "::error::За 10 минут новая версия не появилась на $SITE_URL"; exit 1
+          echo "::error::Деплой завершён, но на $SITE_URL нет новой версии ($VERSION)"; exit 1
