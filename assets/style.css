@@ -232,26 +232,33 @@ h1 {
   padding: 10px 18px; color: var(--text); font-weight: 700; font-size: 15px;
   transition: border-color 150ms;
 }
-.pill:hover, .social:hover { text-decoration: none; border-color: var(--accent); }
+.pill:hover { text-decoration: none; border-color: var(--accent); }
 .pill .tg { width: 16px; height: 16px; flex: none; }
 
-/* instagram в шапке */
-.social {
-  flex: none; position: relative; margin-left: 20px; display: inline-flex; align-items: center; gap: 7px;
-  border: 1px solid var(--border); border-radius: 999px; background: var(--surface);
-  padding: 6px 12px 6px 10px; color: var(--text); font-weight: 700; font-size: 14px;
+/* языки: на странице обе версии, видна одна */
+html.en .l-ru, html:not(.en) .l-en { display: none !important; }
+
+/* переключатель RU / EN в шапке */
+.lang-switch {
+  flex: none; position: relative; margin-left: 20px; display: inline-flex; gap: 2px; padding: 3px;
+  border: 1px solid var(--border); border-radius: 999px; background: var(--surface); cursor: pointer;
+  font: inherit; font-family: var(--mono); font-size: 12.5px; font-weight: 500; letter-spacing: 0.04em;
   transition: border-color 150ms;
 }
-.social::before {
+.lang-switch::before {
   content: ""; position: absolute; left: -25px; top: 50%; transform: translateY(-50%);
   width: 1px; height: 24px; background: var(--border-strong);
 }
-.social .ig { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; flex: none; }
+.lang-switch:hover { border-color: var(--accent); }
+.lang-opt { padding: 5px 10px; border-radius: 999px; color: var(--muted); transition: background 150ms, color 150ms; }
+.lang-switch:hover .lang-opt { color: var(--text-2); }
+html:not(.en) .lang-opt:lang(ru), html.en .lang-opt:lang(en) { background: var(--text); color: var(--bg); }
+.lang-switch:active { transform: scale(0.97); }
 @media (max-width: 720px) {
   .site-header .container { gap: 14px; }
-  .social { padding: 8px; margin-left: 0; }
-  .social::before { display: none; }
-  .social span { display: none; }
+  .lang-switch { margin-left: 0; }
+  .lang-switch::before { display: none; }
+  .lang-opt { padding: 9px 10px; }
 }
 
 /* toast */
@@ -348,7 +355,6 @@ h1 {
 }
 @media (max-width: 720px) {
   .site-header { padding: 10px 0; }
-  .social { padding: 10px; }
   .hero { padding: 36px 0 28px; }
   .hero-page { padding-top: 20px; }
   .lead { font-size: 17px; }

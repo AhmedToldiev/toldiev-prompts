@@ -8,7 +8,8 @@
 
 - `data/categories.mjs` — страницы с командами и порядок страниц в меню
 - `data/extra.mjs` — «Учёба по фото», «Ретро-фото» (готовые промпты), «Сайты с промптами» (ссылки)
-- `site.config.mjs` — название, автор, Instagram, Telegram
+- `data/en.mjs` — английский перевод всех страниц (переключатель RU / EN в шапке)
+- `site.config.mjs` — название, автор, Telegram, тексты английской версии
 - `assets/style.css`, `assets/app.js` — стили и поведение
 - `assets/fonts/` — шрифты Manrope и JetBrains Mono (SIL OFL), лежат на сайте вместо Google Fonts
 
